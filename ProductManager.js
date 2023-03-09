@@ -2,7 +2,8 @@ const fs = require('fs');
 const { json } = require('stream/consumers');
 const path = 'productos.json';
 
-class productManager {
+
+export default class ProductManager {
 
     constructor(path) {
         this.path = path;
@@ -27,7 +28,6 @@ class productManager {
         await fs.promises.writeFile(path, JSON.stringify(products));
         return newProduct;
     }
-
 
     getProductById = async(id) => {
         const products = await this.getProducts();
@@ -54,13 +54,12 @@ class productManager {
     deleteProducts = async () => {
 		if (fs.existsSync(this.path)) {
 			await fs.promises.unlink(this.path);
-			console.log('Productos eliminados.');
 		} else {
 			console.log('Archivo no encontrado.');
 		}
 	};
 
-    deleteProduct = async (id) => {
+    deleteProductById = async (id) => {
 		const products = await this.getProducts();
 		const newArrayProducts = products.filter(product => product.id !== id);
 		await fs.promises.writeFile(this.path, JSON.stringify(newArrayProducts));
@@ -79,44 +78,44 @@ class productManager {
 }
 
 
-let product1 = {
-    title: "producto de prueba",
-    description: "Este es un producto de prueba",
-    price: 200,
-    thumbnail: "Sin imagen",
-    code: "abc123",
-    stock: 25,
-};
+// let product1 = {
+//     title: "producto de prueba",
+//     description: "Este es un producto de prueba",
+//     price: 200,
+//     thumbnail: "Sin imagen",
+//     code: "abc123",
+//     stock: 25,
+// };
 
-let product2 = {
-    title: "producto de prueba 2",
-    description: "Este es un producto de prueba 2",
-    price: 10,
-    thumbnail: "Sin imagen",
-    code: "123",
-    stock: 250,
-};
+// let product2 = {
+//     title: "producto de prueba 2",
+//     description: "Este es un producto de prueba 2",
+//     price: 10,
+//     thumbnail: "Sin imagen",
+//     code: "123",
+//     stock: 250,
+// };
 
-let product3 = {
-    title: "producto de prueba 3",
-    description: "Este es un producto de prueba 3",
-    price: 250,
-    thumbnail: "Sin imagen",
-    code: "abc",
-    stock: 20,
-};
-async function prueba () {
-    const manager1 = new productManager(path);
-    await manager1.addProduct(product1);
-    await manager1.addProduct(product2);
-    await manager1.addProduct(product3);
-    console.log( await manager1.getProducts());
-    console.log( await manager1.getProductById(5));
-    console.log( await manager1.getProductById(1));
-    await manager1.updateProduct(1, {price:250, stock:10})
-    console.log( await manager1.getProductById(1));
+// let product3 = {
+//     title: "producto de prueba 3",
+//     description: "Este es un producto de prueba 3",
+//     price: 250,
+//     thumbnail: "Sin imagen",
+//     code: "abc",
+//     stock: 20,
+// };
+// async function prueba () {
+//     const manager1 = new productManager(path);
+//     await manager1.addProduct(product1);
+//     await manager1.addProduct(product2);
+//     await manager1.addProduct(product3);
+//     console.log( await manager1.getProducts());
+//     console.log( await manager1.getProductById(5));
+//     console.log( await manager1.getProductById(1));
+//     await manager1.updateProduct(1, {price:250, stock:10})
+//     console.log( await manager1.getProductById(1));
 
-}
+// }
 
-prueba();
+// prueba();
 
