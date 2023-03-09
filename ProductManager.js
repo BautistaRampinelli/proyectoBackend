@@ -16,7 +16,7 @@ export default class ProductManager {
             return products;
         } else {
             console.log('El archivo no existe.');
-            return[];
+            return [];
         }
     }
 
@@ -25,25 +25,22 @@ export default class ProductManager {
         const id = this.#createId(products);
         const newProduct = {id, ...product};
         products.push(newProduct);
-        await fs.promises.writeFile(path, JSON.stringify(products));
+        await fs.promises.writeFile(path, JSON.stringify(null, 4, products));
         return newProduct;
     }
 
     getProductById = async(id) => {
         const products = await this.getProducts();
-        const productByID = products.filter(product => product.id === id);
-        if (productByID.length > 0) {
-            return productByID;
-        } else {
-            console.log(`El producto con id=${id} no fue encontrado.`);
-        }
+        const productByID = products.filter(product => product.id === id)[0];
+        if(!productByID) throw new Error(`El producto con id ${id} no existe`);
+        return productByID;
     }
 
     updateProduct = async (id, obj) => {
 		const products = await this.getProducts();
 		const indexProduct = products.findIndex(product => product.id === id);
 		if (indexProduct === -1) {
-			console.log('Producto no encontrado.');
+			throw new Error('Producto no encontrado');
 		}
 		const productUpdated = { ...products[indexProduct], ...obj };
 		products.splice(indexProduct, 1, productUpdated);
