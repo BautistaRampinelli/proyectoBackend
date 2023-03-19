@@ -1,5 +1,5 @@
-const fs = require('fs');
-const { json } = require('stream/consumers');
+import fs from 'fs';
+// import { json } from 'express';
 const path = 'productos.json';
 
 
