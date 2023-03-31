@@ -1,22 +1,39 @@
 import express from "express";
-// import ProductManager from "./ProductManager";
 import cartsRouter from './routes/carts.router.js';
 import productsRouter from './routes/products.router.js';
 import { __dirname } from "./utils.js";
+import handlebars from 'express-handlebars';
+import viewsRouter from './routes/views.router.js'
+import { Server } from "socket.io";
 
 const app = express();
-
+const PORT = 8080;
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+app.use(express.static(__dirname+'/public'));
 
-app.use('/public',express.static(__dirname));
+app.engine('handlebars',handlebars.engine());
+
+app.set('views',__dirname+'/views');
+app.set('view engine',handlebars);
+
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
+app.use('/views',viewsRouter);
 
+const httpServer = app.listen(PORT, () => {
+    console.log(`Escuchando al puerto ${PORT}.`);
+})
 
+const socketServer = new Server(httpServer);
 
+socketServer.on('connection', (socket)=>{
+    console.log(`Cliente conectado: ${socket.id}`);
 
-app.listen(8080, () => {
-    console.log('Escuchando al puerto 8080.');
+    socket.on('disconnet',()=>{
+        console.log(`Usuario desconectado: ${socket.id}`);
+    })
+
+    socket.emit('bienvenida',`Bienvenido a WEBSOCKET cliente con id: ${socket.id}`)
 })
