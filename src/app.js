@@ -22,6 +22,12 @@ app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/views',viewsRouter);
 
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Error interno del servidor.');
+});
+
 const httpServer = app.listen(PORT, () => {
     console.log(`Escuchando al puerto ${PORT}.`);
 })

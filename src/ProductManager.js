@@ -1,7 +1,5 @@
 import fs from 'fs';
-// import { json } from 'express';
 const path = 'productos.json';
-
 
 export default class ProductManager {
 
@@ -22,10 +20,20 @@ export default class ProductManager {
 
     addProduct = async(product) => {
         const products = await this.getProducts();
-        const id = this.#createId(products);
-        const newProduct = {id, ...product};
+        const newProduct = {
+            id: this.#createId(products),
+            ...product,
+            status: product.status ?? true,
+            thumbnails: product.thumbnails ?? []
+        };
+        const requiredFields = ['title', 'description', 'code', 'price', 'stock', 'category'];
+        for (const field of requiredFields) {
+            if (!newProduct[field]) {
+                throw new Error(`El campo ${field} es obligatorio`);
+            }
+        }
         products.push(newProduct);
-        await fs.promises.writeFile(path, JSON.stringify(null, 4, products));
+        await fs.promises.writeFile(this.path, JSON.stringify(products, null, 4));
         return newProduct;
     }
 
@@ -73,4 +81,3 @@ export default class ProductManager {
         return id;
     }
 }
-

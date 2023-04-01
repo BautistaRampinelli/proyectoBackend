@@ -2,9 +2,13 @@
 
 {{#each products}}
 
-<h3>{{title}}</h3>
-<p>{{description}}</p>
-<p>{{price}}</p>
-<p>{{stock}}</p>
+<article aria-label="{{title}}">
+    <h4>{{title}}</h4>
+    <p>{{description}}</p>
+    <div>
+        <span>Precio: {{price}}</span>
+        <span>Stock: {{stock}}</span>
+    </div>
+</article>
 
 {{/each}}
