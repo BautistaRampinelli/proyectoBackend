@@ -5,6 +5,7 @@ import { __dirname } from "./utils.js";
 import handlebars from 'express-handlebars';
 import viewsRouter from './routes/views.router.js'
 import { Server } from "socket.io";
+import './db/dbConfig.js'
 
 const app = express();
 const PORT = 8080;
