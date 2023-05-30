@@ -1,46 +1,64 @@
-import express from "express";
-import cartsRouter from './routes/carts.router.js';
+import express from 'express';
 import productsRouter from './routes/products.router.js';
-import { __dirname } from "./utils.js";
+import cartsRouter from './routes/carts.router.js';
+import { __dirname } from './utils.js';
 import handlebars from 'express-handlebars';
-import viewsRouter from './routes/views.router.js'
-import { Server } from "socket.io";
-import './db/dbConfig.js'
+import viewsRouter from './routes/views.router.js';
+import { Server } from 'socket.io';
+import './db/dbConfig.js';
+import ProductManager from '../src/Dao/ProductManagerMongo.js';
+
+const path = __dirname + '/products.json';
+const productManager = new ProductManager(path);
 
 const app = express();
-const PORT = 8080;
 
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
-app.use(express.static(__dirname+'/public'));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(__dirname + '/public'));
 
-app.engine('handlebars',handlebars.engine());
+//Configuración Handlebars
+app.engine('handlebars', handlebars.engine());
+app.set('views', __dirname + '/views');
+app.set('view engine', 'handlebars');
 
-app.set('views',__dirname+'/views');
-app.set('view engine',handlebars);
-
+//Routes
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
-app.use('/views',viewsRouter);
+app.use('/views', viewsRouter);
 
+const PORT = 8080;
 
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Error interno del servidor.');
-});
+//Configuro el SocketServer
+const httpServer = app.listen(PORT, () => console.log(`Listen in port ${PORT}`));
 
-const httpServer = app.listen(PORT, () => {
-    console.log(`Escuchando al puerto ${PORT}.`);
-})
+const messages = [];
 
 const socketServer = new Server(httpServer);
 
-socketServer.on('connection', (socket)=>{
-    console.log(`Cliente conectado: ${socket.id}`);
+socketServer.on('connection', (socket) => {
+  console.log(`Client conected id: ${socket.id}`);
 
-    socket.on('disconnet',()=>{
-        console.log(`Usuario desconectado: ${socket.id}`);
-    })
+  socket.on('disconnect', () => {
+    console.log(`Client disconected id: ${socket.id}`);
+  });
 
-    socket.emit('bienvenida',`Bienvenido a WEBSOCKET cliente con id: ${socket.id}`)
-})
+  socket.on('addNewProduct', async (product) => {
+    await productManager.addProducts(product);
+  });
+
+  socket.on('deleteProduct', (id) => {
+    console.log(`Product deleted ${id}`);
+    productManager.deleteProductsById(id);
+  });
+
+  socket.on('message', (info) => {
+    messages.push(info);
+    socketServer.emit('chat', messages);
+  });
+
+  socket.on('newUser', (newUser) => {
+    socket.broadcast.emit('broadcastChat', newUser);
+    socketServer.emit('chat', messages);
+  });
+});

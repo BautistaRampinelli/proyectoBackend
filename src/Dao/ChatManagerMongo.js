@@ -1,5 +1,3 @@
-// El archivo debe estar en una carpeta public
-
 const socket = io();
 
 document.getElementById('messageForm').addEventListener('submit', (e) => {
