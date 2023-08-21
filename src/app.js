@@ -1,64 +1,50 @@
 import express from 'express';
-import productsRouter from './routes/products.router.js';
-import cartsRouter from './routes/carts.router.js';
-import { __dirname } from './utils.js';
-import handlebars from 'express-handlebars';
-import viewsRouter from './routes/views.router.js';
-import { Server } from 'socket.io';
-import './db/dbConfig.js';
-import ProductManager from '../src/Dao/ProductManagerMongo.js';
-
-const path = __dirname + '/products.json';
-const productManager = new ProductManager(path);
+import config from './config/config.js';
+import compression from 'express-compression';
+import connectDB from './DAL/mongoDB/dbConfig.js';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import apiRouter from './routes/api.router.js';
+import { errorMiddleware } from './middlewares/error.middleware.js';
+import { logger } from './utils/logger.utils.js';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUiExpress from 'swagger-ui-express';
+import { __dirname } from './utils/dirname.utils.js';
 
 const app = express();
+const NODE_ENV = config.node_env
+const log = logger(NODE_ENV);
+app.use(compression());
+
+connectDB();
+
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.1',
+        info: {
+            title: 'Documentacion API Ecommerce',
+            description: 'Documentacion de la API de Ecommerce',
+        },
+    },
+    apis: [`${__dirname}/docs/**/*.yaml`],
+};
+
+const specs = swaggerJsdoc(swaggerOptions);
+app.use('/apidocs', swaggerUiExpress.serve, swaggerUiExpress.setup(specs));
+
+app.use(morgan('dev'));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname + '/public'));
+app.use(cookieParser());
 
-//Configuración Handlebars
-app.engine('handlebars', handlebars.engine());
-app.set('views', __dirname + '/views');
-app.set('view engine', 'handlebars');
 
-//Routes
-app.use('/api/products', productsRouter);
-app.use('/api/carts', cartsRouter);
-app.use('/views', viewsRouter);
+app.use('/api', apiRouter);
 
-const PORT = 8080;
+app.use(errorMiddleware);
 
-//Configuro el SocketServer
-const httpServer = app.listen(PORT, () => console.log(`Listen in port ${PORT}`));
+const PORT = config.port;
 
-const messages = [];
-
-const socketServer = new Server(httpServer);
-
-socketServer.on('connection', (socket) => {
-  console.log(`Client conected id: ${socket.id}`);
-
-  socket.on('disconnect', () => {
-    console.log(`Client disconected id: ${socket.id}`);
-  });
-
-  socket.on('addNewProduct', async (product) => {
-    await productManager.addProducts(product);
-  });
-
-  socket.on('deleteProduct', (id) => {
-    console.log(`Product deleted ${id}`);
-    productManager.deleteProductsById(id);
-  });
-
-  socket.on('message', (info) => {
-    messages.push(info);
-    socketServer.emit('chat', messages);
-  });
-
-  socket.on('newUser', (newUser) => {
-    socket.broadcast.emit('broadcastChat', newUser);
-    socketServer.emit('chat', messages);
-  });
+app.listen(PORT, () => {
+    log.info(`Server running on port ${PORT}`);
 });
